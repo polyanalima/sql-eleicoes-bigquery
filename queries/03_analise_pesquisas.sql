@@ -8,16 +8,14 @@ Arquivo:
 03_analise_pesquisas.sql
 
 Objetivo:
-Analisar a distribuição das pesquisas eleitorais.
+Realizar análises gerais sobre as pesquisas eleitorais,
+considerando período, cargo, localização, institutos
+e características metodológicas.
 
-Perguntas respondidas:
-
-- Quantas pesquisas existem por ano?
-- Quais estados possuem mais pesquisas?
-- Quais cargos possuem mais pesquisas?
-- Quais institutos realizaram mais pesquisas?
-- Qual a média de entrevistas realizadas?
-- Como as pesquisas se distribuem por turno?
+Observação:
+A tabela possui granularidade por candidato/cenário.
+Por isso, pesquisas são contabilizadas utilizando
+COUNT(DISTINCT id_pesquisa).
 
 Fonte:
 Base dos Dados
@@ -30,137 +28,332 @@ basedosdados.br_poder360_pesquisas.microdados
 
 
 -- =====================================================
--- 1. Quantidade de pesquisas por ano
+-- 1. Quantidade total de pesquisas disponíveis
 -- =====================================================
 
 SELECT
-  ano,
-  COUNT(DISTINCT id_pesquisa) AS quantidade_pesquisas
-FROM `basedosdados.br_poder360_pesquisas.microdados`
-GROUP BY ano
-ORDER BY ano;
 
+  COUNT(DISTINCT id_pesquisa)
+  AS total_pesquisas
 
-
--- =====================================================
--- 2. Quantidade de pesquisas por estado
--- =====================================================
-
-SELECT
-  sigla_uf,
-  COUNT(DISTINCT id_pesquisa) AS quantidade_pesquisas
-FROM `basedosdados.br_poder360_pesquisas.microdados`
-WHERE sigla_uf IS NOT NULL
-GROUP BY sigla_uf
-ORDER BY quantidade_pesquisas DESC;
-
-
-
--- =====================================================
--- 3. Quantidade de pesquisas por cargo
--- =====================================================
-
-SELECT
-  cargo,
-  COUNT(DISTINCT id_pesquisa) AS quantidade_pesquisas
-FROM `basedosdados.br_poder360_pesquisas.microdados`
-GROUP BY cargo
-ORDER BY quantidade_pesquisas DESC;
-
-
-
--- =====================================================
--- 4. Institutos que realizaram mais pesquisas
--- =====================================================
-
-SELECT
-  instituto,
-  COUNT(DISTINCT id_pesquisa) AS quantidade_pesquisas
-FROM `basedosdados.br_poder360_pesquisas.microdados`
-WHERE instituto IS NOT NULL
-GROUP BY instituto
-ORDER BY quantidade_pesquisas DESC;
-
-
-
--- =====================================================
--- 5. Quantidade média de entrevistas por instituto
--- =====================================================
-
-SELECT
-  instituto,
-  ROUND(AVG(quantidade_entrevistas), 0) AS media_entrevistas
-FROM `basedosdados.br_poder360_pesquisas.microdados`
-WHERE instituto IS NOT NULL
-GROUP BY instituto
-ORDER BY media_entrevistas DESC;
-
-
-
--- =====================================================
--- 6. Distribuição de pesquisas por turno
--- =====================================================
-
-SELECT
-  turno,
-  COUNT(DISTINCT id_pesquisa) AS quantidade_pesquisas
-FROM `basedosdados.br_poder360_pesquisas.microdados`
-WHERE turno IS NOT NULL
-GROUP BY turno
-ORDER BY turno;
-
-
-
--- =====================================================
--- 7. Quantidade de pesquisas por tipo de voto
--- =====================================================
-
-SELECT
-  tipo_voto,
-  COUNT(DISTINCT id_pesquisa) AS quantidade_pesquisas
-FROM `basedosdados.br_poder360_pesquisas.microdados`
-WHERE tipo_voto IS NOT NULL
-GROUP BY tipo_voto
-ORDER BY quantidade_pesquisas DESC;
-
-
-
--- =====================================================
--- 8. Média da margem de erro das pesquisas
--- =====================================================
-
-SELECT
-  ROUND(AVG(margem_mais), 2) AS media_margem_mais,
-  ROUND(AVG(margem_menos), 2) AS media_margem_menos
 FROM `basedosdados.br_poder360_pesquisas.microdados`;
 
 
 
 -- =====================================================
--- 9. Quantidade de entrevistas realizadas por ano
+-- 2. Distribuição de pesquisas por ano
 -- =====================================================
 
 SELECT
+
   ano,
-  SUM(quantidade_entrevistas) AS total_entrevistas
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
 FROM `basedosdados.br_poder360_pesquisas.microdados`
+
 GROUP BY ano
+
 ORDER BY ano;
 
 
 
 -- =====================================================
--- 10. Municípios com maior número de pesquisas
+-- 3. Distribuição de pesquisas por cargo
 -- =====================================================
 
 SELECT
-  nome_municipio,
-  sigla_uf,
-  COUNT(DISTINCT id_pesquisa) AS quantidade_pesquisas
+
+  cargo,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
 FROM `basedosdados.br_poder360_pesquisas.microdados`
-WHERE nome_municipio IS NOT NULL
+
+WHERE cargo IS NOT NULL
+
+GROUP BY cargo
+
+ORDER BY quantidade_pesquisas DESC;
+
+
+
+-- =====================================================
+-- 4. Pesquisas por ano e cargo
+-- =====================================================
+-- Evita misturar eleições diferentes
+
+SELECT
+
+  ano,
+
+  cargo,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
 GROUP BY
+
+  ano,
+  cargo
+
+ORDER BY
+
+  ano,
+  quantidade_pesquisas DESC;
+
+
+
+-- =====================================================
+-- 5. Distribuição geográfica por estado
+-- =====================================================
+-- Mostra onde existem registros de pesquisas
+
+SELECT
+
+  sigla_uf,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+WHERE sigla_uf IS NOT NULL
+
+GROUP BY sigla_uf
+
+ORDER BY quantidade_pesquisas DESC;
+
+
+
+-- =====================================================
+-- 6. Distribuição geográfica por estado e cargo
+-- =====================================================
+-- Permite comparar eleições diferentes
+
+SELECT
+
+  sigla_uf,
+
+  cargo,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+WHERE sigla_uf IS NOT NULL
+
+GROUP BY
+
+  sigla_uf,
+  cargo
+
+ORDER BY
+
+  quantidade_pesquisas DESC;
+
+
+
+-- =====================================================
+-- 7. Municípios com maior quantidade de pesquisas
+-- =====================================================
+
+SELECT
+
+  sigla_uf,
+
   nome_municipio,
-  sigla_uf
-ORDER BY quantidade_pesquisas DESC
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+WHERE nome_municipio IS NOT NULL
+
+GROUP BY
+
+  sigla_uf,
+  nome_municipio
+
+ORDER BY
+
+  quantidade_pesquisas DESC
+
 LIMIT 20;
+
+
+
+-- =====================================================
+-- 8. Cobertura geográfica das pesquisas por ano
+-- =====================================================
+-- Mede quantos estados e municípios foram analisados
+
+SELECT
+
+  ano,
+
+  COUNT(DISTINCT sigla_uf)
+  AS estados_analisados,
+
+  COUNT(DISTINCT nome_municipio)
+  AS municipios_analisados,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS pesquisas_realizadas
+
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+GROUP BY ano
+
+ORDER BY ano;
+
+
+
+-- =====================================================
+-- 9. Institutos responsáveis pelas pesquisas
+-- =====================================================
+
+SELECT
+
+  instituto,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+WHERE instituto IS NOT NULL
+
+GROUP BY instituto
+
+ORDER BY quantidade_pesquisas DESC;
+
+
+
+-- =====================================================
+-- 10. Quantidade média de entrevistas por pesquisa
+-- =====================================================
+
+SELECT
+
+  ano,
+
+  ROUND(
+    AVG(quantidade_entrevistas),
+    2
+  ) AS media_entrevistas,
+
+
+  COUNT(DISTINCT id_pesquisa)
+  AS pesquisas
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+GROUP BY ano
+
+ORDER BY ano;
+
+
+
+-- =====================================================
+-- 11. Margem média de erro das pesquisas
+-- =====================================================
+
+SELECT
+
+  ano,
+
+  ROUND(
+    AVG(margem_mais),
+    2
+  ) AS media_margem_superior,
+
+
+  ROUND(
+    AVG(margem_menos),
+    2
+  ) AS media_margem_inferior
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+GROUP BY ano
+
+ORDER BY ano;
+
+
+
+-- =====================================================
+-- 12. Distribuição dos tipos de voto
+-- =====================================================
+
+SELECT
+
+  tipo_voto,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+WHERE tipo_voto IS NOT NULL
+
+GROUP BY tipo_voto
+
+ORDER BY quantidade_pesquisas DESC;
+
+
+
+-- =====================================================
+-- 13. Quantidade de cenários por pesquisa
+-- =====================================================
+-- Mostra a complexidade das pesquisas
+
+SELECT
+
+  id_pesquisa,
+
+  COUNT(DISTINCT id_cenario)
+  AS quantidade_cenarios
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+GROUP BY id_pesquisa
+
+ORDER BY quantidade_cenarios DESC;
+
+
+
+-- =====================================================
+-- 14. Pesquisas realizadas por período do ano
+-- =====================================================
+
+SELECT
+
+  ano,
+
+  EXTRACT(MONTH FROM data)
+  AS mes,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+WHERE data IS NOT NULL
+
+GROUP BY
+
+  ano,
+  mes
+
+ORDER BY
+
+  ano,
+  mes;
