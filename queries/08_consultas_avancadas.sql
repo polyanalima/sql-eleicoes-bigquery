@@ -418,3 +418,64 @@ SELECT
 
 
 FROM `basedosdados.br_poder360_pesquisas.microdados`;
+
+
+
+
+/*
+=========================================================
+
+Análise:
+Tabela analítica final de pesquisas eleitorais
+
+Objetivo:
+Criar uma visão consolidada para consumo analítico
+e preparação para dashboards.
+
+=========================================================
+*/
+
+
+SELECT
+
+  ano,
+
+  cargo,
+
+  tipo_voto,
+
+  COUNT(DISTINCT id_pesquisa)
+  AS quantidade_pesquisas,
+
+  COUNT(DISTINCT nome_candidato)
+  AS quantidade_candidatos,
+
+  COUNT(DISTINCT sigla_uf)
+  AS estados_analisados,
+
+  ROUND(
+    AVG(percentual),
+    2
+  ) AS media_percentual
+
+
+FROM `basedosdados.br_poder360_pesquisas.microdados`
+
+
+WHERE ano IS NOT NULL
+
+
+GROUP BY
+
+  ano,
+
+  cargo,
+
+  tipo_voto
+
+
+ORDER BY
+
+  ano,
+
+  quantidade_pesquisas DESC;
